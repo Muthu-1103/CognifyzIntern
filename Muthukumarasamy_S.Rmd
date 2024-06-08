@@ -1,0 +1,276 @@
+---
+title: "Level1"
+output:
+  word_document: default
+  pdf_document: default
+date: "2024-05-28"
+---
+
+Level 1
+Task 1: Data Exploration and Preprocessing
+Explore the dataset and identify the number
+of rows and columns.
+Check for missing values in each column and
+handle them accordingly.
+Perform data type conversion if necessary.
+Analyze the distribution of the target variable
+("Aggregate rating") and identify any class
+imbalances.
+```{r}
+df=read.csv('E:/Virtual_Intern/Dataset .csv')
+print("Number of Rows:")
+print(nrow(df))
+print("Number of Columns:")
+print(ncol(df))
+print("Missing Values:")
+print(sum(is.na(df)))
+AggregateRating=df$Aggregate.rating
+hist(AggregateRating)
+```
+Task 2:Descriptive Analysis
+Calculate basic statistical measures (mean,
+median, standard deviation, etc.) for numerical
+columns.
+Explore the distribution of categorical
+variables like "Country Code,
+" "City,
+" and
+"Cuisines.
+"
+Identify the top cuisines and cities with the
+highest number of restaurants.
+
+```{r}
+print("Mean,Median and Standard Deviation Of Various Numerical Features")
+mean(df$Restaurant.ID,na.rm=TRUE)
+median(df$Restaurant.ID,na.rm=TRUE)
+sd(df$Restaurant.ID,na.rm=TRUE)
+mean(df$Country.Code,na.rm=TRUE)
+median(df$Country.Code,na.rm=TRUE)
+sd(df$Country.Code,na.rm=TRUE)
+mean(df$Longitude,na.rm=TRUE)
+median(df$Longitude,na.rm=TRUE)
+sd(df$Longitude,na.rm=TRUE)
+mean(df$Latitude,na.rm=TRUE)
+median(df$Latitude,na.rm=TRUE)
+sd(df$Latitude,na.rm=TRUE)
+mean(df$Average.Cost.for.two,na.rm=TRUE)
+median(df$Average.Cost.for.two,na.rm=TRUE)
+sd(df$Average.Cost.for.two,na.rm=TRUE)
+mean(df$Price.range,na.rm=TRUE)
+median(df$Price.range,na.rm=TRUE)
+sd(df$Price.range,na.rm=TRUE)
+mean(df$Aggregate.rating,na.rm=TRUE)
+median(df$Aggregate.rating,na.rm=TRUE)
+sd(df$Aggregate.rating,na.rm=TRUE)
+mean(df$Votes,na.rm=TRUE)
+median(df$Votes,na.rm=TRUE)
+sd(df$Votes,na.rm=TRUE)
+library(ggplot2)
+x1<-head(df)
+ggplot()+
+geom_bar(data=x1,mapping = aes(x=Country.Code))+labs(title = "Distribution Of Categorical Variables")
+ggplot()+
+geom_bar(data=x1,mapping = aes(x=City))+labs(title = "Distribution Of Categorical Variables")
+ggplot()+
+geom_bar(data=x1,mapping = aes(x=Cuisines))+labs(title = "Distribution Of Categorical Variables")
+library(dplyr)
+ans<-df %>% group_by(City) %>% summarize(count=n())
+print("Highest Number Of Restaurants with Top Cities")
+head(arrange(ans,desc(count)),10)
+ans1<-df %>% group_by(Cuisines) %>% summarize(count=n())
+print("Highest Number Of Restaurants with Top Cuisines")
+head(arrange(ans1,desc(count)),10)
+```
+Task 3: Geospatial Analysis
+Visualize the locations of restaurants on a
+map using latitude and longitude
+information.
+Analyze the distribution of restaurants
+across different cities or countries.
+Determine if there is any correlation
+between the restaurant's location and its
+rating.
+```{r}
+library(leaflet)
+map<-leaflet(df) %>% addTiles() %>% setView(lng = mean(df$Longitude),lat = mean(df$Latitude),zoom=4)
+map<-map %>% addCircleMarkers(lng = ~Longitude,lat = ~Latitude,popup=~paste("Locality:",`Locality`),radius = 3,color = 'red',stroke = FALSE,fillOpacity = 0.6)
+library(htmlwidgets)
+
+saveWidget(map,'restaurant.html',selfcontained = TRUE)
+print("Map is Saved")
+group_Restaurant<- df %>% group_by(Restaurant.ID)
+Group_City<- group_Restaurant %>% group_by(City) %>% summarize(Count=n())
+top_Restaurant<-head(Group_City)
+
+ggplot(data = top_Restaurant)+geom_bar(mapping=aes(x=City,y=Count),stat = "identity")+labs(title = "Distribution Of Restaurants")
+
+category_to_numeric<-as.numeric(factor(df$Locality))
+cor_val<-cor(category_to_numeric,df$Aggregate.rating)
+if(cor_val<0){
+  print("Datas(Locality and Aggregate Rating) are -vely Correlated")
+}else{
+  print("Datas(Locality and Aggregate Rating) are Positively Correlated")
+}
+
+```
+Level 2:
+Task 1: Table Booking and Online Delivery
+Determine the percentage of restaurants that
+offer table booking and online delivery.
+Compare the average ratings of restaurants
+with table booking and those without.
+Analyze the availability of online delivery
+among restaurants with different price ranges.
+```{r}
+library(base)
+t1<-df$Has.Online.delivery
+Online_percent<-prop.table(table(t1))
+Table_booking<-prop.table(table(df$Has.Table.booking))
+print("Online Delivery")
+a1<-Online_percent['Yes']*100
+a1
+print("Table Booking")
+a2<-Table_booking['Yes']*100
+a2
+avg_rating<-aggregate(Aggregate.rating~Has.Table.booking,data=df,FUN = mean)
+print("Average Rating Of Restaurants")
+avg_rating
+Online_delivery_availability<-aggregate(Has.Online.delivery~Price.range,data=df,FUN=function(x) mean(x=='Yes')*100)
+
+print("Availability Of Online Delivery with Different Price Ranges")
+Online_delivery_availability
+```
+Task 2: Price Range Analysis
+Determine the most common price range
+among all the restaurants.
+Calculate the average rating for each price
+range.
+Identify the color that represents the highest
+average rating among different price ranges.
+```{r}
+tab<-table(df$Price.range)
+print("Most Common Price Range")
+names(tab[which.max(tab)])
+print("Average Rating for each Price Range")
+library(dplyr)
+avg_rating_diff_price_range<-df %>% group_by(price_range=df$Price.range) %>% summarize( Average_Rating=mean(Aggregate.rating))
+
+avg_rating_diff_price_range
+
+highest_avg_rating<-avg_rating_diff_price_range %>% filter(Average_Rating==max(Average_Rating))
+
+color_highest_price_avg_rate<-df %>% group_by(Rating.color) %>% filter(Price.range==highest_avg_rating$price_range) %>% summarise(count=n())
+print("Color that represents the highest
+average rating among different price ranges")
+color_highest_price_avg_rate
+```
+Task 3: Feature Engineering
+Extract additional features from the existing
+columns, such as the length of the restaurant
+name or address.
+Create new features like "Has Table Booking"
+or "Has Online Delivery" by encoding
+categorical variables.
+
+```{r}
+df['Length_of_Restaurant_name']<-nchar(df$Restaurant.Name)
+df['Length_of_Restaurant_Address']<-nchar(df$Address)
+print("Length of Restaurant Address")
+head(df$Length_of_Restaurant_Address)
+print("Length of Restaurant Name")
+head(df$Length_of_Restaurant_name)
+df['Encode_Has_Table_Booking']=as.numeric(factor(df$Has.Table.booking))
+print("Encoded Restaurant_Has_Table_Booking")
+head(df$Encode_Has_Table_Booking)
+df['Encode_Has_Online_Delivery']=as.numeric(factor(df$Has.Online.delivery))
+print("Encoded Restaurant_Has_Online_Delivery")
+head(df$Encode_Has_Online_Delivery)
+```
+Level 3:
+Task 1: Predictive Modeling
+Build a regression model to predict the
+aggregate rating of a restaurant based on
+available features.
+Split the dataset into training and testing sets
+and evaluate the model's performance using
+appropriate metrics.
+Experiment with different algorithms (e.g.,
+linear regression, decision trees, random
+forest) and compare their performance.
+```{r}
+train_index<-sample(1:120,0.7*120)
+x_train<-df$Encode_Has_Table_Booking[train_index]
+y_train<-df$Aggregate.rating[train_index]
+x_test<-df$Encode_Has_Table_Booking[-train_index]
+y_test<-df$Aggregate.rating[-train_index]
+df_train<-data.frame(x=x_train,y=y_train)
+df_test<-data.frame(x=x_test,y=y_test)
+lm_model<-function(df_train){
+   beta1<-sum((df_train$x-mean(df_train$x))*(df_train$y-mean(df_train$y)))/sum((df_train$x-mean(df_train$x))^2)
+ beta0<-mean(df_train$y)-beta1*mean(df_train$x)
+ return(c(x1=beta0,y1=beta1))
+}
+ans<-lm_model(df_train)
+print("Slope and Intercept From Linear Regression Model")
+ans
+lr_predict<-function(ans,df_test)
+{
+ y_pred<-ans["x1"]+ans["y1"]*df_test$x
+ return(data.frame(pred=y_pred))
+}
+ans1<-lr_predict(ans,df_test)
+
+print("Prediction Of Aggregate Rating based On Features")
+glimpse(head(ans1))
+
+#Performance Evaluation
+mse<-mean((df_test$y-ans1$pred)^2)
+mse<-sqrt(mse)
+
+print("The Evaluated Performance Metrices based on Root Mean Square Error")
+mse
+
+```
+
+Task 2: Customer Preference Analysis
+Analyze the relationship between the type of
+cuisine and the restaurant's rating.
+Identify the most popular cuisines among
+customers based on the number of votes.
+Determine if there are any specific cuisines
+that tend to receive higher ratings.
+```{r}
+ans<-head(df)
+ggplot(data =ans)+geom_bar(mapping = aes(x=Cuisines,y=Aggregate.rating),stat = "identity")
+
+ggplot(data =ans)+geom_boxplot(mapping = aes(x=Cuisines,y=Aggregate.rating))
+print("Most Popular Cuisines")
+df %>% filter(Votes==max(Votes)) %>% summarise(Cuisines)
+print("Specific Cuisines to receive high Ratings")
+df %>% filter(Aggregate.rating==max(Aggregate.rating)) %>% reframe(Cuisines)
+```
+Task 3: Data Visualization
+Create visualizations to represent the distribution
+of ratings using different charts (histogram, bar
+plot, etc.).
+Compare the average ratings of different cuisines
+or cities using appropriate visualizations.
+Visualize the relationship between various
+features and the target variable to gain insights.
+
+```{r}
+hist(df$Aggregate.rating,main = "Distribution Of Ratings",xlab = "Rating",ylab = "Frequency")
+barplot(df$Aggregate.rating,main = "Distribution Of Ratings",xlab = "Rating",ylab = "Frequency")
+plot(df$Aggregate.rating,main = "Distribution Of Ratings",xlab = "Rating",ylab = "Frequency")
+
+avg_rate_diff_cuisine<-head(df %>% group_by(Cuisines) %>% summarise(avg_rating=mean(Aggregate.rating)),4)
+
+library(ggplot2)
+ggplot(data=avg_rate_diff_cuisine,mapping=aes(x=Cuisines,y=avg_rating))+geom_bar(stat="identity")+labs(title = "Comparison of Ratings Vs Cuisines")
+
+avg_rate_diff_city<-head(df %>% group_by(City) %>% summarise(avg_rating=mean(Aggregate.rating)),4)
+
+ggplot(data=avg_rate_diff_city,mapping=aes(x=City,y=avg_rating))+geom_bar(stat="identity")+labs(title = "Comparison of Ratings Vs City")
+ggplot(data=df)+geom_boxplot(mapping=aes(x=Cuisines,y=Aggregate.rating))+coord_cartesian(xlim = c(0,3))
+```

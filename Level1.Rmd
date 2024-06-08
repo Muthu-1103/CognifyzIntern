@@ -1,0 +1,118 @@
+---
+title: "Level1"
+output: html_document
+date: "2024-06-07"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Level 1
+Task 1: Data Exploration and Preprocessing
+Explore the dataset and identify the number
+of rows and columns.
+Check for missing values in each column and
+handle them accordingly.
+Perform data type conversion if necessary.
+Analyze the distribution of the target variable
+("Aggregate rating") and identify any class
+imbalances.
+```{r}
+df=read.csv('E:/Virtual_Intern/Dataset .csv')
+print("Number of Rows:")
+print(nrow(df))
+print("Number of Columns:")
+print(ncol(df))
+print("Missing Values:")
+print(sum(is.na(df)))
+AggregateRating=df$Aggregate.rating
+hist(AggregateRating)
+```
+Task 2:Descriptive Analysis
+Calculate basic statistical measures (mean,
+median, standard deviation, etc.) for numerical
+columns.
+Explore the distribution of categorical
+variables like "Country Code,
+" "City,
+" and
+"Cuisines.
+"
+Identify the top cuisines and cities with the
+highest number of restaurants.
+
+```{r}
+print("Mean,Median and Standard Deviation Of Various Numerical Features")
+mean(df$Restaurant.ID,na.rm=TRUE)
+median(df$Restaurant.ID,na.rm=TRUE)
+sd(df$Restaurant.ID,na.rm=TRUE)
+mean(df$Country.Code,na.rm=TRUE)
+median(df$Country.Code,na.rm=TRUE)
+sd(df$Country.Code,na.rm=TRUE)
+mean(df$Longitude,na.rm=TRUE)
+median(df$Longitude,na.rm=TRUE)
+sd(df$Longitude,na.rm=TRUE)
+mean(df$Latitude,na.rm=TRUE)
+median(df$Latitude,na.rm=TRUE)
+sd(df$Latitude,na.rm=TRUE)
+mean(df$Average.Cost.for.two,na.rm=TRUE)
+median(df$Average.Cost.for.two,na.rm=TRUE)
+sd(df$Average.Cost.for.two,na.rm=TRUE)
+mean(df$Price.range,na.rm=TRUE)
+median(df$Price.range,na.rm=TRUE)
+sd(df$Price.range,na.rm=TRUE)
+mean(df$Aggregate.rating,na.rm=TRUE)
+median(df$Aggregate.rating,na.rm=TRUE)
+sd(df$Aggregate.rating,na.rm=TRUE)
+mean(df$Votes,na.rm=TRUE)
+median(df$Votes,na.rm=TRUE)
+sd(df$Votes,na.rm=TRUE)
+library(ggplot2)
+x1<-head(df)
+ggplot()+
+geom_bar(data=x1,mapping = aes(x=Country.Code))+labs(title = "Distribution Of Categorical Variables")
+ggplot()+
+geom_bar(data=x1,mapping = aes(x=City))+labs(title = "Distribution Of Categorical Variables")
+ggplot()+
+geom_bar(data=x1,mapping = aes(x=Cuisines))+labs(title = "Distribution Of Categorical Variables")
+library(dplyr)
+ans<-df %>% group_by(City) %>% summarize(count=n())
+print("Highest Number Of Restaurants with Top Cities")
+head(arrange(ans,desc(count)),10)
+ans1<-df %>% group_by(Cuisines) %>% summarize(count=n())
+print("Highest Number Of Restaurants with Top Cuisines")
+head(arrange(ans1,desc(count)),10)
+```
+Task 3: Geospatial Analysis
+Visualize the locations of restaurants on a
+map using latitude and longitude
+information.
+Analyze the distribution of restaurants
+across different cities or countries.
+Determine if there is any correlation
+between the restaurant's location and its
+rating.
+```{r}
+library(leaflet)
+map<-leaflet(df) %>% addTiles() %>% setView(lng = mean(df$Longitude),lat = mean(df$Latitude),zoom=4)
+map<-map %>% addCircleMarkers(lng = ~Longitude,lat = ~Latitude,popup=~paste("Locality:",`Locality`),radius = 3,color = 'red',stroke = FALSE,fillOpacity = 0.6)
+library(htmlwidgets)
+print("Mapping is Saved")
+saveWidget(map,'restaurant.html',selfcontained = TRUE)
+
+group_Restaurant<- df %>% group_by(Restaurant.ID)
+Group_City<- group_Restaurant %>% group_by(City) %>% summarize(Count=n())
+top_Restaurant<-head(Group_City)
+
+ggplot(data = top_Restaurant)+geom_bar(mapping=aes(x=City,y=Count),stat = "identity")+labs(title = "Distribution Of Restaurants")
+
+category_to_numeric<-as.numeric(factor(df$Locality))
+cor_val<-cor(category_to_numeric,df$Aggregate.rating)
+if(cor_val<0){
+  print("Datas(Locality and Aggregate Rating) are -vely Correlated")
+}else{
+  print("Datas(Locality and Aggregate Rating) are Positively Correlated")
+}
+
+```

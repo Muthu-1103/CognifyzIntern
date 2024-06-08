@@ -1,0 +1,86 @@
+---
+title: "Level2"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+date: "2024-06-05"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Task 1: Table Booking and Online Delivery
+Determine the percentage of restaurants that
+offer table booking and online delivery.
+Compare the average ratings of restaurants
+with table booking and those without.
+Analyze the availability of online delivery
+among restaurants with different price ranges.
+```{r}
+library(base)
+t1<-df$Has.Online.delivery
+Online_percent<-prop.table(table(t1))
+Table_booking<-prop.table(table(df$Has.Table.booking))
+print("Online Delivery")
+a1<-Online_percent['Yes']*100
+a1
+print("Table Booking")
+a2<-Table_booking['Yes']*100
+a2
+avg_rating<-aggregate(Aggregate.rating~Has.Table.booking,data=df,FUN = mean)
+print("Average Rating Of Restaurants")
+avg_rating
+Online_delivery_availability<-aggregate(Has.Online.delivery~Price.range,data=df,FUN=function(x) mean(x=='Yes')*100)
+
+print("Availability Of Online Delivery with Different Price Ranges")
+Online_delivery_availability
+```
+
+Task 2: Price Range Analysis
+Determine the most common price range
+among all the restaurants.
+Calculate the average rating for each price
+range.
+Identify the color that represents the highest
+average rating among different price ranges.
+```{r}
+tab<-table(df$Price.range)
+print("Most Common Price Range")
+names(tab[which.max(tab)])
+print("Average Rating for each Price Range")
+library(dplyr)
+avg_rating_diff_price_range<-df %>% group_by(price_range=df$Price.range) %>% summarize( Average_Rating=mean(Aggregate.rating))
+
+print("Average Rating based On Different Price Range")
+avg_rating_diff_price_range
+
+highest_avg_rating<-avg_rating_diff_price_range %>% filter(Average_Rating==max(Average_Rating))
+color_highest_price_avg_rate<-df %>% group_by(Rating.color) %>% filter(Price.range==highest_avg_rating$price_range) %>% summarise(count=n())
+print("Color that represents the highest
+average rating among different price ranges")
+color_highest_price_avg_rate
+```
+Task 3: Feature Engineering
+Extract additional features from the existing
+columns, such as the length of the restaurant
+name or address.
+Create new features like "Has Table Booking"
+or "Has Online Delivery" by encoding
+categorical variables.
+
+```{r}
+df['Length_of_Restaurant_name']<-nchar(df$Restaurant.Name)
+df['Length_of_Restaurant_Address']<-nchar(df$Address)
+print("Length of Restaurant Address")
+head(df$Length_of_Restaurant_Address)
+print("Length of Restaurant Name")
+head(df$Length_of_Restaurant_name)
+df['Encode_Has_Table_Booking']=as.numeric(factor(df$Has.Table.booking))
+print("Encoded Restaurant_Has_Table_Booking")
+head(df$Encode_Has_Table_Booking)
+df['Encode_Has_Online_Delivery']=as.numeric(factor(df$Has.Online.delivery))
+print("Encoded Restaurant_Has_Online_Delivery")
+head(df$Encode_Has_Online_Delivery)
+```
+
